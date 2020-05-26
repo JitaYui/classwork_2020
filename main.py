@@ -1,7 +1,20 @@
 from tkinter import *
+from tkinter import StringVar
 from tkinter.ttk import *
+import time
+from threading import Thread, Lock
+from pyModbusTCP.client import ModbusClient
+
 
 tk = Tk()
+ip = StringVar()
+SlaID = IntVar()
+Addr = IntVar()
+Quan = IntVar()
+Rate = IntVar()
+port = IntVar()
+Tmout = IntVar()
+
 
 
 def createFuctionWindow():
@@ -9,7 +22,7 @@ def createFuctionWindow():
     frame1 = Frame(nw, padding=10)
     frame1.pack()
     l1 = Label(frame1, text="Slave ID")
-    t1 = Text(frame1, height=1, width=10)
+    t1 = Entry(frame1, textvariable=SlaID)
     b1 = Button(frame1, text="OK")
     b1.grid(row=0, column=2, padx=5, pady=2)
     l2 = Label(frame1, text="Function")
@@ -19,11 +32,11 @@ def createFuctionWindow():
     b2 = Button(frame1, text="Cancel", command=lambda: nw.destroy())
     b2.grid(row=1, column=2, padx=5, pady=2)
     l3 = Label(frame1, text="Address")
-    t3 = Text(frame1, height=1, width=10)
+    t3 = Entry(frame1, textvariable=Addr)
     l4 = Label(frame1, text="Quantity")
-    t4 = Text(frame1, height=1, width=10)
+    t4 = Entry(frame1, textvariable=Quan)
     l5 = Label(frame1, text="Scan Rate")
-    t5 = Text(frame1, height=1, width=10)
+    t5 = Entry(frame1, textvariable=Rate)
     b5 = Button(frame1, text="Apply")
     b5.grid(row=4, column=2, padx=5, pady=2)
     labels = [l1, l2, l3, l4, l5]
@@ -51,15 +64,17 @@ def createConnectionWindow():
     lf2.pack(side=TOP)
     l1 = Label(lf2, text="IP Address or Node Name")
     l1.grid(row=0, column=0, columnspan=3, sticky=W)
-    cb2 = Combobox(lf2)
+    #cb2 = Entry(lf2)
+    #cb2.grid(row=1, column=0, columspan=3, sticky=W)
+    cb2 = Combobox(lf2, textvariable=ip)
     cb2.grid(row=1, column=0, columnspan=3, sticky=W)
     l2 = Label(lf2, text="Server Port")
     l2.grid(row=2, column=0)
     l3 = Label(lf2, text="Connect Timeout")
     l3.grid(row=2, column=1)
-    t2 = Text(lf2, width=10, height=1)
+    t2 = Entry(lf2, textvariable=port)
     t2.grid(row=3, column=0)
-    t3 = Text(lf2, width=10, height=1)
+    t3 = Entry(lf2, textvariable=Tmout)
     t3.grid(row=3, column=1)
     rb1 = Radiobutton(lf2, text="IPv4", value=0)
     rb2 = Radiobutton(lf2, text="IPv6", value=1)
@@ -78,3 +93,49 @@ btn3.pack(side="left", padx=30)
 tk.wm_title("MODBUS POLLING")
 tk.geometry("800x600")
 tk.mainloop()
+
+
+
+SERVER_HOST = ip
+SERVER_PORT = port
+
+# set global
+regs = []
+
+# init a thread lock
+regs_lock = Lock()
+
+
+# modbus polling thread
+def polling_thread():
+    global regs
+    c = ModbusClient(host=SERVER_HOST, port=SERVER_PORT)
+    # polling loop
+    while True:
+        # keep TCP open
+        if not c.is_open():
+            c.open()
+        # do modbus reading on socket
+        reg_list = c.read_holding_registers(Addr, Quan)
+        # if read is ok, store result in regs (with thread lock synchronization)
+        if reg_list:
+            with regs_lock:
+                regs = list(reg_list)
+        # 1s before next polling
+        time.sleep(1)
+
+
+# start polling thread
+tp = Thread(target=polling_thread)
+# set daemon: polling thread will exit if main thread exit
+tp.daemon = True
+tp.start()
+
+# display loop (in main thread)
+while True:
+    # print regs list (with thread lock synchronization)
+    with regs_lock:
+        print(regs)
+    # 1s before next print
+    time.sleep(1)
+
