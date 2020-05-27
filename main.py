@@ -2,18 +2,19 @@ from tkinter import *
 from tkinter import StringVar
 from tkinter.ttk import *
 import time
-from threading import Thread, Lock
-from pyModbusTCP.client import ModbusClient
+import modbus_tk.modbus_tcp as mt
+import modbus_tk.defines as md
+
 
 
 tk = Tk()
 ip = StringVar()
-SlaID = IntVar()
-Addr = IntVar()
-Quan = IntVar()
-Rate = IntVar()
+slaid = IntVar()
+addr = IntVar()
+quan = IntVar()
+rate = IntVar()
 port = IntVar()
-Tmout = IntVar()
+timeout = IntVar()
 
 
 
@@ -22,7 +23,7 @@ def createFuctionWindow():
     frame1 = Frame(nw, padding=10)
     frame1.pack()
     l1 = Label(frame1, text="Slave ID")
-    t1 = Entry(frame1, textvariable=SlaID)
+    t1 = Entry(frame1, textvariable=slaid)
     b1 = Button(frame1, text="OK")
     b1.grid(row=0, column=2, padx=5, pady=2)
     l2 = Label(frame1, text="Function")
@@ -32,11 +33,11 @@ def createFuctionWindow():
     b2 = Button(frame1, text="Cancel", command=lambda: nw.destroy())
     b2.grid(row=1, column=2, padx=5, pady=2)
     l3 = Label(frame1, text="Address")
-    t3 = Entry(frame1, textvariable=Addr)
+    t3 = Entry(frame1, textvariable=addr)
     l4 = Label(frame1, text="Quantity")
-    t4 = Entry(frame1, textvariable=Quan)
+    t4 = Entry(frame1, textvariable=quan)
     l5 = Label(frame1, text="Scan Rate")
-    t5 = Entry(frame1, textvariable=Rate)
+    t5 = Entry(frame1, textvariable=rate)
     b5 = Button(frame1, text="Apply")
     b5.grid(row=4, column=2, padx=5, pady=2)
     labels = [l1, l2, l3, l4, l5]
@@ -74,7 +75,7 @@ def createConnectionWindow():
     l3.grid(row=2, column=1)
     t2 = Entry(lf2, textvariable=port)
     t2.grid(row=3, column=0)
-    t3 = Entry(lf2, textvariable=Tmout)
+    t3 = Entry(lf2, textvariable=timeout)
     t3.grid(row=3, column=1)
     rb1 = Radiobutton(lf2, text="IPv4", value=0)
     rb2 = Radiobutton(lf2, text="IPv6", value=1)
@@ -94,48 +95,22 @@ tk.wm_title("MODBUS POLLING")
 tk.geometry("800x600")
 tk.mainloop()
 
+IP = ip.get()
+SLAID = slaid.get()
+ADDR =addr.get()
+QUAN = quan.get()
+RATE = rate.get()
+PORT = port.get()
+TIMEOUT = timeout.get()
 
 
-SERVER_HOST = ip
-SERVER_PORT = port
-
-# set global
-regs = []
-
-# init a thread lock
-regs_lock = Lock()
-
-
-# modbus polling thread
-def polling_thread():
-    global regs
-    c = ModbusClient(host=SERVER_HOST, port=SERVER_PORT)
-    # polling loop
+#Modbus_polling
+master = mt.TcpMaster(IP, PORT)
+master.set_timeout(TIMEOUT)
+try:
     while True:
-        # keep TCP open
-        if not c.is_open():
-            c.open()
-        # do modbus reading on socket
-        reg_list = c.read_holding_registers(Addr, Quan)
-        # if read is ok, store result in regs (with thread lock synchronization)
-        if reg_list:
-            with regs_lock:
-                regs = list(reg_list)
-        # 1s before next polling
+        F1 = master.execute(slave=SLAID, function_code=md.READ_HOLDING_REGISTERS, starting_address=ADDR, quantity_of_x=QUAN)
+        print(F1)  # 取到的所有寄存器的值
         time.sleep(1)
-
-
-# start polling thread
-tp = Thread(target=polling_thread)
-# set daemon: polling thread will exit if main thread exit
-tp.daemon = True
-tp.start()
-
-# display loop (in main thread)
-while True:
-    # print regs list (with thread lock synchronization)
-    with regs_lock:
-        print(regs)
-    # 1s before next print
-    time.sleep(1)
-
+except:
+    print("Timeout")
