@@ -15,7 +15,7 @@ quan = IntVar()
 #rate = IntVar()
 port = IntVar()
 timeout = IntVar()
-
+"""reset"""
 
 
 def createFuctionWindow():
