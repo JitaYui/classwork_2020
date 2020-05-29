@@ -15,7 +15,7 @@ quan = IntVar()
 #rate = IntVar()
 port = IntVar()
 timeout = IntVar()
-
+"""reset"""
 
 
 def createFuctionWindow():
@@ -48,6 +48,7 @@ def createFuctionWindow():
         i.grid(row=inputs.index(i), column=1, padx=5, pady=2, sticky=W)
 
 
+
 def createConnectionWindow():
     nw = Toplevel(tk)
     f1 = Frame(nw)
@@ -57,9 +58,9 @@ def createConnectionWindow():
     cb1 = Combobox(lf1, state="disabled", value=("Modbus TCP/IP",), )
     cb1.current(0)
     cb1.pack()
-    b1 = Button(f1, text="OK")
+    b1 = Button(f1, text="OK", command= lambda: nw.destroy() )
     b1.grid(row=0,column=1,padx=10)
-    b2 = Button(f1, text="Cancel")
+    b2 = Button(f1, text="Cancel", command= lambda: nw.destroy() )
     b2.grid(row=1,column=1,padx=10)
     lf2 = LabelFrame(nw, text="Remote Modbus Server", padding=10)
     lf2.pack(side=TOP)
@@ -82,35 +83,50 @@ def createConnectionWindow():
     rb1.grid(row=2, column=2)
     rb2.grid(row=3, column=2)
 
+def Modbus():
+    IP = ip.get()
+    SLAID = slaid.get()
+    ADDR = addr.get()
+    QUAN = quan.get()
+    # RATE = rate.get()
+    PORT = port.get()
+    TIMEOUT = timeout.get() / 1000
+    # Modbus_polling
+    master = mt.TcpMaster(IP, PORT)
+    master.set_timeout(TIMEOUT)
+    if SLAID=="" or IP == "" or ADDR == "" or QUAN == "" or PORT== "" or TIMEOUT == "":
+
+        print("error")
+        F1 = "error"
+    else:
+        while True:
+            F1 = master.execute(slave=SLAID, function_code=md.READ_HOLDING_REGISTERS, starting_address=ADDR,
+                                quantity_of_x=QUAN)
+            print(F1)  # 取到的所有寄存器的值
+            time.sleep(1)
+
+
+#Function
+
+
 
 frame1 = Frame(tk)
 frame1.pack()
-btn1 = Button(frame1, text="START", command='')
-btn1.pack(side="left", pady=30, padx=30)
+t = Text(frame1, height=20)
+t.pack(side='bottom')
+btn1 = Button(frame1, text="START", command=Modbus)
+btn1.pack(side="left", pady=40, padx=60)
 btn2 = Button(frame1, text="CONNECT", command=createConnectionWindow)
-btn2.pack(side="left", padx=30)
+btn2.pack(side="left", padx=40)
 btn3 = Button(frame1, text="FUNCTION", command=createFuctionWindow)
-btn3.pack(side="left", padx=30)
+btn3.pack(side="left", padx=40)
+
 tk.wm_title("MODBUS POLLING")
 tk.geometry("800x600")
 tk.mainloop()
 
-IP = ip.get()
-SLAID = slaid.get()
-ADDR =addr.get()
-QUAN = quan.get()
-#RATE = rate.get()
-PORT = port.get()
-TIMEOUT = timeout.get()/ 1000
 
 
-#Modbus_polling
-master = mt.TcpMaster(IP, PORT)
-master.set_timeout(TIMEOUT)
-try:
-    while True:
-        F1 = master.execute(slave=SLAID, function_code=md.READ_HOLDING_REGISTERS, starting_address=ADDR, quantity_of_x=QUAN)
-        print(F1)  # 取到的所有寄存器的值
-        time.sleep(1)
-except:
-    print("Timeout")
+
+
+
