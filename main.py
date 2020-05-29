@@ -12,7 +12,7 @@ ip = StringVar()
 slaid = IntVar()
 addr = IntVar()
 quan = IntVar()
-rate = IntVar()
+#rate = IntVar()
 port = IntVar()
 timeout = IntVar()
 
@@ -36,12 +36,12 @@ def createFuctionWindow():
     t3 = Entry(frame1, textvariable=addr)
     l4 = Label(frame1, text="Quantity")
     t4 = Entry(frame1, textvariable=quan)
-    l5 = Label(frame1, text="Scan Rate")
-    t5 = Entry(frame1, textvariable=rate)
+    #l5 = Label(frame1, text="Scan Rate")
+    #t5 = Entry(frame1, textvariable=rate)
     b5 = Button(frame1, text="Apply")
     b5.grid(row=4, column=2, padx=5, pady=2)
-    labels = [l1, l2, l3, l4, l5]
-    inputs = [t1, c2, t3, t4, t5]
+    labels = [l1, l2, l3, l4]
+    inputs = [t1, c2, t3, t4]
     for l in labels:
         l.grid(row=labels.index(l), column=0, padx=5, pady=2)
     for i in inputs:
@@ -99,9 +99,9 @@ IP = ip.get()
 SLAID = slaid.get()
 ADDR =addr.get()
 QUAN = quan.get()
-RATE = rate.get()
+#RATE = rate.get()
 PORT = port.get()
-TIMEOUT = timeout.get()
+TIMEOUT = timeout.get()/ 1000
 
 
 #Modbus_polling
