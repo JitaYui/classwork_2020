@@ -22,19 +22,34 @@ timeout = IntVar()
 timeout.set(1000)
 tvar = StringVar()
 
+
 def createFunctionWindow():
+    slaid_temp = slaid.get()
+    addr_temp = addr.get()
+    quan_temp = quan.get()
+
     nw = Toplevel(tk)
+
+    def close(i=1):
+        if i: #cancel or close without click ok.
+            slaid.set(slaid_temp)
+            addr.set(addr_temp)
+            quan.set(quan_temp)
+            nw.destroy()
+        else: #close by clicking ok
+            nw.destroy()
+
     frame1 = Frame(nw, padding=10)
     frame1.pack()
     l1 = Label(frame1, text="Slave ID")
     t1 = Entry(frame1, textvariable=slaid)
-    b1 = Button(frame1, text="OK", command=lambda: nw.destroy())
+    b1 = Button(frame1, text="OK", command=lambda: close(0))
     b1.grid(row=0, column=2, padx=5, pady=2)
     l2 = Label(frame1, text="Function")
     text1 = "03 Read Holding Registers(4x)"
     c2 = Combobox(frame1, state="disabled", value=(text1,), width=len(text1))
     c2.current(0)
-    b2 = Button(frame1, text="Cancel", command=lambda: nw.destroy())
+    b2 = Button(frame1, text="Cancel", command=lambda: close(1))
     b2.grid(row=1, column=2, padx=5, pady=2)
     l3 = Label(frame1, text="Address")
     t3 = Entry(frame1, textvariable=addr)
@@ -53,7 +68,21 @@ def createFunctionWindow():
 
 
 def createConnectionWindow():
+    slaid_temp = slaid.get()
+    addr_temp = addr.get()
+    quan_temp = quan.get()
+
     nw = Toplevel(tk)
+
+    def close(i=1):
+        if i: #cancel or close without click ok.
+            slaid.set(slaid_temp)
+            addr.set(addr_temp)
+            quan.set(quan_temp)
+            nw.destroy()
+        else: #close by clicking ok
+            nw.destroy()
+
     f1 = Frame(nw)
     f1.pack()
     lf1 = LabelFrame(f1, text="Connection", padding=10)
