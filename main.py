@@ -105,17 +105,26 @@ class TModbus(Thread):
         # if SLAID == "" or IP == "" or ADDR == "" or QUAN == "" or PORT == "" or TIMEOUT == "":
         #     print("error")
         #     F1 = "error"
+        tTitle = "DATE        TIME        TEMP."
+        Ttemp = [tTitle]
         while True:
             F1 = master.execute(slave=self.SLAID, function_code=md.READ_HOLDING_REGISTERS, starting_address=self.ADDR,
                                 quantity_of_x=self.QUAN)
             print(F1)  # 取到的所有寄存器的值
             print(float(F1[0] / 10))
             tmp = float(F1[0] / 10)
-            tvar.set(tmp)
             tt = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
             x = tt.split(" ")
             date = x[0]
             Time = x[1]
+            Ttemp.append(tt + '   ' + str(tmp) )
+            if len(Ttemp) > 11:
+                Ttemp.pop(1)
+            s = ''
+            for i in Ttemp:
+                s += i
+                s += '\n'
+            tvar.set(s)
 
             db = pymysql.connect(host='172.20.10.4', user='userj', password='1qazXSW@', port=3306, db='temperature')
 
@@ -158,6 +167,6 @@ btn3 = Button(frame1, text="FUNCTION", command=createFunctionWindow)
 btn3.pack(side="left", padx=40)
 
 tk.wm_title("MODBUS POLLING")
-tk.geometry("800x600")
+tk.geometry("800x400")
 tk.mainloop()
 
