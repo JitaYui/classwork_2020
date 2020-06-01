@@ -4,7 +4,7 @@ from tkinter.ttk import *
 import time
 import modbus_tk.modbus_tcp as mt
 import modbus_tk.defines as md
-
+import pymysql
 
 
 tk = Tk()
@@ -103,6 +103,28 @@ def Modbus():
             F1 = master.execute(slave=SLAID, function_code=md.READ_HOLDING_REGISTERS, starting_address=ADDR,
                                 quantity_of_x=QUAN)
             print(F1)  # 取到的所有寄存器的值
+            print(float(F1[0]/10))
+            tmp = float(F1[0]/10)
+            tt = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
+            x = tt.split(" ")
+            date = x[0]
+            Time = x[1]
+
+            db = pymysql.connect(host='localhost', user='root', password='1qazXSW@', port=3306, db='temperature')
+
+            cursor = db.cursor()
+
+            sql = 'INSERT INTO temp01(date, Time, tmp) values(%s, %s, %s)'
+            try:
+
+                cursor.execute(sql,(date, Time, tmp))
+
+                db.commit()
+
+            except:
+
+                db.rollback()
+
             time.sleep(1)
 
 
