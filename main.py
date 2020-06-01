@@ -20,6 +20,7 @@ port = IntVar()
 port.set(502)
 timeout = IntVar()
 timeout.set(1000)
+tvar = StringVar()
 
 def createFunctionWindow():
     nw = Toplevel(tk)
@@ -41,8 +42,8 @@ def createFunctionWindow():
     t4 = Entry(frame1, textvariable=quan)
     # l5 = Label(frame1, text="Scan Rate")
     # t5 = Entry(frame1, textvariable=rate)
-    b5 = Button(frame1, text="Apply")
-    b5.grid(row=4, column=2, padx=5, pady=2)
+    #b5 = Button(frame1, text="Apply")
+    #b5.grid(row=4, column=2, padx=5, pady=2)
     labels = [l1, l2, l3, l4]
     inputs = [t1, c2, t3, t4]
     for l in labels:
@@ -110,6 +111,7 @@ class TModbus(Thread):
             print(F1)  # 取到的所有寄存器的值
             print(float(F1[0] / 10))
             tmp = float(F1[0] / 10)
+            tvar.set(tmp)
             tt = time.strftime("%Y%m%d %H:%M:%S", time.localtime())
             x = tt.split(" ")
             date = x[0]
@@ -117,20 +119,15 @@ class TModbus(Thread):
 
             db = pymysql.connect(host='172.20.10.4', user='userj', password='1qazXSW@', port=3306, db='temperature')
 
-            cursor = db.cursor()
+            with db.cursor() as cursor:
 
-            sql = 'INSERT INTO temp01(date, Time, tmp) values(%s, %s, %s)'
-            try:
-
-                cursor.execute(sql, (date, Time, tmp))
-
-                db.commit()
-
-            except:
-
-                db.rollback()
-
-            time.sleep(1)
+                sql = 'INSERT INTO temp01(date, Time, Temperature) values(%s, %s, %s)'
+                try:
+                    cursor.execute(sql, (date, Time, tmp))
+                    db.commit()
+                except Exception as e:
+                    print(e)
+                time.sleep(1)
 
 def Modbus():
     tmodbus = TModbus()
@@ -138,12 +135,23 @@ def Modbus():
 # Function
 
 
+def Test():
+    db = pymysql.connect(host='172.20.10.4', user='userj', password='1qazXSW@', port=3306, db='temperature')
+    with db.cursor() as cursor:
+        sql = 'SELECT * from temp01'
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        print(result)
+
+
 frame1 = Frame(tk)
 frame1.pack()
-t = Text(frame1, height=20)
+t = Label(frame1, textvariable=tvar, background='white', relief=SUNKEN)
 t.pack(side='bottom')
 btn1 = Button(frame1, text="START", command=Modbus)
-btn1.pack(side="left", pady=40, padx=60)
+btn1.pack(side="left", pady=40, padx=40)
+btntemp = Button(frame1, text="FETCH", command=Test)
+btntemp.pack(side="left", padx=40)
 btn2 = Button(frame1, text="CONNECT", command=createConnectionWindow)
 btn2.pack(side="left", padx=40)
 btn3 = Button(frame1, text="FUNCTION", command=createFunctionWindow)
